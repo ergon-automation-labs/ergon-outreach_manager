@@ -1,0 +1,138 @@
+defmodule BotArmyOutreachManager.Stores.TargetStore do
+  use GenServer
+
+  @moduledoc """
+  In-memory store for outreach targets loaded from PostgreSQL.
+  Provides fast reads and triggers writes to DB before updates.
+  """
+
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  end
+
+  def init(_opts) do
+    targets = load_from_db()
+    {:ok, %{targets: targets}}
+  end
+
+  # Public API
+
+  def get_all do
+    GenServer.call(__MODULE__, :get_all)
+  end
+
+  def get(target_name) do
+    GenServer.call(__MODULE__, {:get, target_name})
+  end
+
+  def log_send(target_name, email) do
+    GenServer.call(__MODULE__, {:log_send, target_name, email})
+  end
+
+  def log_reply(target_name, reply_text) do
+    GenServer.call(__MODULE__, {:log_reply, target_name, reply_text})
+  end
+
+  def log_call(target_name, call_date, notes \\ nil) do
+    GenServer.call(__MODULE__, {:log_call, target_name, call_date, notes})
+  end
+
+  def close_deal(target_name, status, reason) do
+    GenServer.call(__MODULE__, {:close_deal, target_name, status, reason})
+  end
+
+  # Callbacks
+
+  def handle_call(:get_all, _from, state) do
+    {:reply, Map.values(state.targets), state}
+  end
+
+  def handle_call({:get, target_name}, _from, state) do
+    target = Map.get(state.targets, target_name)
+    {:reply, target, state}
+  end
+
+  def handle_call({:log_send, target_name, email}, _from, state) do
+    now = DateTime.utc_now()
+
+    target =
+      Map.get(state.targets, target_name, %{
+        target_name: target_name,
+        email: email,
+        status: "SENT",
+        first_send_date: now,
+        last_send_date: now,
+        metadata: %{}
+      })
+      |> Map.merge(%{
+        status: "SENT",
+        last_send_date: now,
+        metadata: Map.put(target[:metadata] || %{}, :sends, (target[:metadata][:sends] || 0) + 1)
+      })
+
+    persist_to_db(target)
+
+    new_state = Map.put(state.targets, target_name, target)
+    {:reply, target, %{state | targets: new_state}}
+  end
+
+  def handle_call({:log_reply, target_name, reply_text}, _from, state) do
+    now = DateTime.utc_now()
+
+    target =
+      Map.get(state.targets, target_name)
+      |> Map.merge(%{
+        status: "REPLIED",
+        reply_date: now,
+        reply_text: reply_text
+      })
+
+    persist_to_db(target)
+
+    new_state = Map.put(state.targets, target_name, target)
+    {:reply, target, %{state | targets: new_state}}
+  end
+
+  def handle_call({:log_call, target_name, call_date, notes}, _from, state) do
+    target =
+      Map.get(state.targets, target_name)
+      |> Map.merge(%{
+        status: "CALL",
+        call_date: call_date,
+        call_notes: notes
+      })
+
+    persist_to_db(target)
+
+    new_state = Map.put(state.targets, target_name, target)
+    {:reply, target, %{state | targets: new_state}}
+  end
+
+  def handle_call({:close_deal, target_name, status, reason}, _from, state) do
+    target =
+      Map.get(state.targets, target_name)
+      |> Map.merge(%{
+        status: status,
+        closed_status: status,
+        closed_reason: reason
+      })
+
+    persist_to_db(target)
+
+    new_state = Map.put(state.targets, target_name, target)
+    {:reply, target, %{state | targets: new_state}}
+  end
+
+  # Helpers
+
+  defp load_from_db do
+    # TODO: Load from PostgreSQL when migrations are in place
+    # For now, return empty map
+    %{}
+  end
+
+  defp persist_to_db(_target) do
+    # TODO: Persist to PostgreSQL
+    :ok
+  end
+end

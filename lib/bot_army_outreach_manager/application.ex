@@ -22,6 +22,7 @@ defmodule BotArmyOutreachManager.Application do
     children =
       []
       |> maybe_add_repo()
+      |> maybe_add_target_store()
       |> maybe_add_pulse_publisher()
       |> maybe_add_workers()
 
@@ -35,6 +36,10 @@ defmodule BotArmyOutreachManager.Application do
     else
       [{BotArmyOutreachManager.Repo, []} | children]
     end
+  end
+
+  defp maybe_add_target_store(children) do
+    [{BotArmyOutreachManager.Stores.TargetStore, []} | children]
   end
 
   defp maybe_add_pulse_publisher(children) do
