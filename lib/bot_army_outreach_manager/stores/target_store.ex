@@ -152,12 +152,6 @@ defmodule BotArmyOutreachManager.Stores.TargetStore do
     end
   end
 
-  defp to_map(schema) do
-    schema
-    |> Map.from_struct()
-    |> Map.drop([:__meta__])
-  end
-
   defp to_schema_attrs(target) do
     target
     |> Map.take([
