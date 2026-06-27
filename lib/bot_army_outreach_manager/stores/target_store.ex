@@ -55,19 +55,17 @@ defmodule BotArmyOutreachManager.Stores.TargetStore do
   def handle_call({:log_send, target_name, email}, _from, state) do
     now = DateTime.utc_now()
 
+    existing =
+      Map.get(state.targets, target_name, %{target_name: target_name, email: email, metadata: %{}})
+
+    send_count = (get_in(existing, [:metadata, :sends]) || 0) + 1
+
     target =
-      Map.get(state.targets, target_name, %{
-        target_name: target_name,
-        email: email,
+      Map.merge(existing, %{
         status: "SENT",
-        first_send_date: now,
+        first_send_date: existing[:first_send_date] || now,
         last_send_date: now,
-        metadata: %{}
-      })
-      |> Map.merge(%{
-        status: "SENT",
-        last_send_date: now,
-        metadata: Map.put(target[:metadata] || %{}, :sends, (target[:metadata][:sends] || 0) + 1)
+        metadata: Map.put(existing[:metadata] || %{}, :sends, send_count)
       })
 
     persist_to_db(target)
