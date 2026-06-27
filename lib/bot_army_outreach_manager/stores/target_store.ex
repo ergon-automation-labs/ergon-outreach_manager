@@ -11,7 +11,7 @@ defmodule BotArmyOutreachManager.Stores.TargetStore do
   end
 
   def init(_opts) do
-    targets = load_from_db()
+    targets = try_load_from_db()
     {:ok, %{targets: targets}}
   end
 
@@ -122,6 +122,14 @@ defmodule BotArmyOutreachManager.Stores.TargetStore do
   end
 
   # Helpers
+
+  defp try_load_from_db do
+    try do
+      load_from_db()
+    rescue
+      _ -> %{}
+    end
+  end
 
   defp load_from_db do
     case BotArmyOutreachManager.Repo.all(BotArmyOutreachManager.Schemas.OutreachTarget) do
