@@ -124,12 +124,51 @@ defmodule BotArmyOutreachManager.Stores.TargetStore do
   # Helpers
 
   defp load_from_db do
-    # TODO: Load from PostgreSQL when migrations are in place
-    %{}
+    case BotArmyOutreachManager.Repo.all(BotArmyOutreachManager.Schemas.OutreachTarget) do
+      targets when is_list(targets) ->
+        targets
+        |> Enum.map(&to_map/1)
+        |> Enum.into(%{}, fn target -> {target.target_name, target} end)
+
+      _ ->
+        %{}
+    end
   end
 
-  defp persist_to_db(_target) do
-    # TODO: Persist to PostgreSQL
-    :ok
+  defp persist_to_db(%{target_name: name} = target) do
+    changeset =
+      BotArmyOutreachManager.Schemas.OutreachTarget.changeset(
+        %BotArmyOutreachManager.Schemas.OutreachTarget{},
+        to_schema_attrs(target)
+      )
+
+    case BotArmyOutreachManager.Repo.insert_or_update(changeset) do
+      {:ok, _} -> :ok
+      {:error, reason} -> Logger.error("Failed to persist target: #{inspect(reason)}")
+    end
+  end
+
+  defp to_map(schema) do
+    schema
+    |> Map.from_struct()
+    |> Map.drop([:__meta__])
+  end
+
+  defp to_schema_attrs(target) do
+    target
+    |> Map.take([
+      :target_name,
+      :email,
+      :status,
+      :first_send_date,
+      :last_send_date,
+      :reply_date,
+      :reply_text,
+      :call_date,
+      :call_notes,
+      :closed_status,
+      :closed_reason,
+      :metadata
+    ])
   end
 end
