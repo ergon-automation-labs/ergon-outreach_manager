@@ -44,29 +44,8 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
   def handle_continue(:connect, state) do
     case GenServer.call(BotArmyRuntime.NATS.Connection, :get_connection, 5000) do
       {:ok, conn} ->
-        BotArmyRuntime.NATS.Connection.subscribe_to_status()
-        Logger.info("Connected to NATS, subscribing to topics")
-
-        subscriptions =
-          [
-            # Add your subjects here
-          ]
-          |> Enum.map(fn subject ->
-            case Gnat.sub(conn, self(), subject) do
-              {:ok, sub} ->
-                Logger.info("Subscribed to #{subject}")
-                sub
-
-              {:error, reason} ->
-                Logger.error("Failed to subscribe to #{subject}: #{inspect(reason)}")
-                nil
-            end
-          end)
-          |> Enum.filter(&(not is_nil(&1)))
-
-        # Register subjects for runtime discovery
+        subscriptions = subscribe_to_subjects(conn)
         BotArmyRuntime.Registry.register("outreach_manager", @subjects, @version)
-
         {:noreply, %{state | subscriptions: subscriptions, conn: conn}}
 
       {:error, _reason} ->
@@ -126,6 +105,28 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
   @impl true
   def handle_info(:reconnect, state) do
     {:noreply, state, {:continue, :connect}}
+  end
+
+  # NATS subscriptions
+  defp subscribe_to_subjects(conn) do
+    BotArmyRuntime.NATS.Connection.subscribe_to_status()
+    Logger.info("Connected to NATS, subscribing to topics")
+
+    @subjects
+    |> Enum.map(&subscribe_subject(conn, &1))
+    |> Enum.filter(&(not is_nil(&1)))
+  end
+
+  defp subscribe_subject(conn, subject) do
+    case Gnat.sub(conn, self(), subject) do
+      {:ok, sub} ->
+        Logger.info("Subscribed to #{subject}")
+        sub
+
+      {:error, reason} ->
+        Logger.error("Failed to subscribe to #{subject}: #{inspect(reason)}")
+        nil
+    end
   end
 
   # Message routing

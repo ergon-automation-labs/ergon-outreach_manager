@@ -125,7 +125,6 @@ defmodule BotArmyOutreachManager.Stores.TargetStore do
 
   defp load_from_db do
     # TODO: Load from PostgreSQL when migrations are in place
-    # For now, return empty map
     %{}
   end
 
