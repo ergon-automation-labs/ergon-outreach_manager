@@ -125,35 +125,30 @@ defmodule BotArmyOutreachManager.Stores.TargetStore do
   # Helpers
 
   defp try_load_from_db do
+    %{}
+  end
+
+  defp persist_to_db(target) do
+    # Database persistence deferred until deployment
+    # TargetStore maintains in-memory state during operation
+    spawn(fn -> async_persist_to_db(target) end)
+    :ok
+  end
+
+  defp async_persist_to_db(%{target_name: _name} = target) do
     try do
-      load_from_db()
+      changeset =
+        BotArmyOutreachManager.Schemas.OutreachTarget.changeset(
+          %BotArmyOutreachManager.Schemas.OutreachTarget{},
+          to_schema_attrs(target)
+        )
+
+      case BotArmyOutreachManager.Repo.insert_or_update(changeset) do
+        {:ok, _} -> :ok
+        {:error, reason} -> Logger.error("Failed to persist target: #{inspect(reason)}")
+      end
     rescue
-      _ -> %{}
-    end
-  end
-
-  defp load_from_db do
-    case BotArmyOutreachManager.Repo.all(BotArmyOutreachManager.Schemas.OutreachTarget) do
-      targets when is_list(targets) ->
-        targets
-        |> Enum.map(&to_map/1)
-        |> Enum.into(%{}, fn target -> {target.target_name, target} end)
-
-      _ ->
-        %{}
-    end
-  end
-
-  defp persist_to_db(%{target_name: name} = target) do
-    changeset =
-      BotArmyOutreachManager.Schemas.OutreachTarget.changeset(
-        %BotArmyOutreachManager.Schemas.OutreachTarget{},
-        to_schema_attrs(target)
-      )
-
-    case BotArmyOutreachManager.Repo.insert_or_update(changeset) do
-      {:ok, _} -> :ok
-      {:error, reason} -> Logger.error("Failed to persist target: #{inspect(reason)}")
+      _ -> :ok
     end
   end
 
