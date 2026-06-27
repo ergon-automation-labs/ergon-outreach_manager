@@ -64,19 +64,7 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
   def handle_info({:msg, msg}, state) do
     BotArmyRuntime.Tracing.with_consumer_span(msg.topic, Map.get(msg, :headers), fn ->
       Logger.debug("Received NATS message on subject: #{msg.topic}")
-
-      # Handle request/reply patterns
-      if msg.reply_to do
-        case msg.topic do
-          # Add your request/reply handlers here
-          # "example.task.list" ->
-          #   handle_task_list(msg, state)
-          _ ->
-            Logger.debug("Unknown request/reply subject: #{msg.topic}")
-        end
-      else
-        handle_pubsub_message(msg)
-      end
+      handle_message(msg)
     end)
 
     {:noreply, state}
@@ -98,6 +86,20 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
   @impl true
   def handle_info(:reconnect, state) do
     {:noreply, state, {:continue, :connect}}
+  end
+
+  # Message routing
+  defp handle_message(msg) do
+    if msg.reply_to do
+      handle_request_reply(msg)
+    else
+      handle_pubsub_message(msg)
+    end
+  end
+
+  defp handle_request_reply(_msg) do
+    # Add your request/reply handlers here
+    # "example.task.list" -> handle_task_list(msg)
   end
 
   # Message handling
