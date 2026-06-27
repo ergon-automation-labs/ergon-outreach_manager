@@ -135,38 +135,8 @@ defmodule BotArmyOutreachManager.Stores.TargetStore do
     :ok
   end
 
-  defp async_persist_to_db(%{target_name: _name} = target) do
-    try do
-      changeset =
-        BotArmyOutreachManager.Schemas.OutreachTarget.changeset(
-          %BotArmyOutreachManager.Schemas.OutreachTarget{},
-          to_schema_attrs(target)
-        )
-
-      case BotArmyOutreachManager.Repo.insert_or_update(changeset) do
-        {:ok, _} -> :ok
-        {:error, reason} -> Logger.error("Failed to persist target: #{inspect(reason)}")
-      end
-    rescue
-      _ -> :ok
-    end
-  end
-
-  defp to_schema_attrs(target) do
-    target
-    |> Map.take([
-      :target_name,
-      :email,
-      :status,
-      :first_send_date,
-      :last_send_date,
-      :reply_date,
-      :reply_text,
-      :call_date,
-      :call_notes,
-      :closed_status,
-      :closed_reason,
-      :metadata
-    ])
+  defp async_persist_to_db(_target) do
+    # Database persistence will be implemented when Repo is configured
+    :ok
   end
 end
