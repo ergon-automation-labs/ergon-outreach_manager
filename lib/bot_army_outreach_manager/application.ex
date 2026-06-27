@@ -56,6 +56,8 @@ defmodule BotArmyOutreachManager.Application do
       # Examples: Scheduler, Poller, Watcher
       # Pattern: gated with if @env in [:prod, :dev] to prevent long-running processes in test
       children
+    else
+      children
     end
   end
 end
