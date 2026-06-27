@@ -75,14 +75,7 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
             Logger.debug("Unknown request/reply subject: #{msg.topic}")
         end
       else
-        # Handle pub/sub messages
-        case BotArmyCore.NATS.Decoder.decode(msg.body) do
-          {:ok, decoded_message} ->
-            route_message(decoded_message, msg.topic)
-
-          {:error, reason} ->
-            Logger.warning("Failed to decode message from #{msg.topic}: #{inspect(reason)}")
-        end
+        handle_pubsub_message(msg)
       end
     end)
 
@@ -105,6 +98,17 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
   @impl true
   def handle_info(:reconnect, state) do
     {:noreply, state, {:continue, :connect}}
+  end
+
+  # Message handling
+  defp handle_pubsub_message(msg) do
+    case BotArmyCore.NATS.Decoder.decode(msg.body) do
+      {:ok, decoded_message} ->
+        route_message(decoded_message, msg.topic)
+
+      {:error, reason} ->
+        Logger.warning("Failed to decode message from #{msg.topic}: #{inspect(reason)}")
+    end
   end
 
   # NATS subscriptions
