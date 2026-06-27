@@ -1,5 +1,6 @@
 defmodule BotArmyOutreachManager.Stores.TargetStore do
   use GenServer
+  require Logger
 
   @moduledoc """
   In-memory store for outreach targets loaded from PostgreSQL.
