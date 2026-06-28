@@ -12,6 +12,8 @@ defmodule BotArmyOutreachManager.Application do
 
   use Application
 
+  @env Mix.env()
+
   @impl true
   def start(_type, _args) do
     # Note: BotArmyRuntime.Telemetry and BotArmyRuntime.NATS.Connection are started
@@ -22,14 +24,19 @@ defmodule BotArmyOutreachManager.Application do
         BotArmyOutreachManager.NATS.Consumer,
         BotArmyOutreachManager.Stores.TargetStore
       ]
+      |> maybe_add_repo()
       |> maybe_add_workers()
 
     opts = [strategy: :one_for_one, name: BotArmyOutreachManager.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
-  defp maybe_add_target_store(children) do
-    [{BotArmyOutreachManager.Stores.TargetStore, []} | children]
+  defp maybe_add_repo(children) do
+    if @env == :test do
+      children
+    else
+      [{BotArmyOutreachManager.Repo, []} | children]
+    end
   end
 
   defp maybe_add_workers(children) do
