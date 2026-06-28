@@ -12,8 +12,6 @@ defmodule BotArmyOutreachManager.Application do
 
   use Application
 
-  @env Mix.env()
-
   @impl true
   def start(_type, _args) do
     # Note: BotArmyRuntime.Telemetry and BotArmyRuntime.NATS.Connection are started
