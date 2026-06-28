@@ -18,8 +18,11 @@ defmodule BotArmyOutreachManager.Application do
     # by bot_army_runtime automatically — do not add them here.
 
     children =
-      []
-      |> maybe_add_target_store()
+      [
+        BotArmyRuntime.NATS.Connection,
+        BotArmyOutreachManager.NATS.Consumer,
+        BotArmyOutreachManager.Stores.TargetStore
+      ]
       |> maybe_add_workers()
 
     opts = [strategy: :one_for_one, name: BotArmyOutreachManager.Supervisor]
