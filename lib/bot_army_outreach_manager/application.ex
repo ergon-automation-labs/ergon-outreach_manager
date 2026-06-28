@@ -19,25 +19,15 @@ defmodule BotArmyOutreachManager.Application do
 
     children =
       []
-      |> maybe_add_repo()
       |> maybe_add_target_store()
-      |> maybe_add_pulse_publisher()
       |> maybe_add_workers()
 
     opts = [strategy: :one_for_one, name: BotArmyOutreachManager.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
-  defp maybe_add_repo(children) do
-    [{BotArmyOutreachManager.Repo, []} | children]
-  end
-
   defp maybe_add_target_store(children) do
     [{BotArmyOutreachManager.Stores.TargetStore, []} | children]
-  end
-
-  defp maybe_add_pulse_publisher(children) do
-    [{BotArmyOutreachManager.PulsePublisher, []} | children]
   end
 
   defp maybe_add_workers(children) do
