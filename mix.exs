@@ -19,7 +19,8 @@ defmodule BotArmyOutreachManager.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {BotArmyOutreachManager.Application, []}
+      mod: {BotArmyOutreachManager.Application, []},
+      env: [ecto_repos: [BotArmyOutreachManager.Repo]]
     ]
   end
 
