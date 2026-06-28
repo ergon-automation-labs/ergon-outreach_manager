@@ -19,7 +19,6 @@ defmodule BotArmyOutreachManager.Application do
 
     children =
       [
-        BotArmyRuntime.NATS.Connection,
         BotArmyOutreachManager.NATS.Consumer,
         BotArmyOutreachManager.Stores.TargetStore
       ]
