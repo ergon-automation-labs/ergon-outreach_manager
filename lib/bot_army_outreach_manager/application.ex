@@ -31,11 +31,7 @@ defmodule BotArmyOutreachManager.Application do
   end
 
   defp maybe_add_repo(children) do
-    if @env in [:prod, :dev] do
-      [{BotArmyOutreachManager.Repo, []} | children]
-    else
-      children
-    end
+    [{BotArmyOutreachManager.Repo, []} | children]
   end
 
   defp maybe_add_target_store(children) do
@@ -43,21 +39,12 @@ defmodule BotArmyOutreachManager.Application do
   end
 
   defp maybe_add_pulse_publisher(children) do
-    if @env in [:prod, :dev] do
-      [{BotArmyOutreachManager.PulsePublisher, []} | children]
-    else
-      children
-    end
+    [{BotArmyOutreachManager.PulsePublisher, []} | children]
   end
 
   defp maybe_add_workers(children) do
-    if @env in [:prod, :dev] do
-      # Bot-specific workers and pollers go here (GenServers that do async work)
-      # Examples: Scheduler, Poller, Watcher
-      # Pattern: gated with if @env in [:prod, :dev] to prevent long-running processes in test
-      children
-    else
-      children
-    end
+    # Bot-specific workers and pollers go here (GenServers that do async work)
+    # Examples: Scheduler, Poller, Watcher
+    children
   end
 end
