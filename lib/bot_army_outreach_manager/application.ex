@@ -32,7 +32,7 @@ defmodule BotArmyOutreachManager.Application do
   end
 
   defp maybe_add_repo(children) do
-    if @env == :test do
+    if @env == :prod do
       children
     else
       [{BotArmyOutreachManager.Repo, []} | children]
