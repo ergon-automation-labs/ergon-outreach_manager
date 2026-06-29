@@ -12,8 +12,6 @@ defmodule BotArmyOutreachManager.Application do
 
   use Application
 
-  @env Mix.env()
-
   @impl true
   def start(_type, _args) do
     # Note: BotArmyRuntime.Telemetry and BotArmyRuntime.NATS.Connection are started
@@ -32,10 +30,11 @@ defmodule BotArmyOutreachManager.Application do
   end
 
   defp maybe_add_repo(children) do
-    if @env == :prod do
-      children
-    else
-      [{BotArmyOutreachManager.Repo, []} | children]
+    # Skip Repo in production to avoid startup failures with database connectivity
+    # In dev/test, Repo will attempt to connect for migrations and manual testing
+    case Application.get_env(:bot_army_outreach_manager, :start_repo, false) do
+      true -> [{BotArmyOutreachManager.Repo, []} | children]
+      false -> children
     end
   end
 
