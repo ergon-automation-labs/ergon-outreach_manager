@@ -6,8 +6,8 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
   Uses standardized Reply format for request/reply patterns.
 
   All request/reply handlers should return responses using Reply helpers:
-  - BotArmyRuntime.NATS.Reply.ok(data) for success
-  - BotArmyRuntime.NATS.Reply.error(message, code) for errors
+  - BotArmyLibraryRuntime.NATS.Reply.ok(data) for success
+  - BotArmyLibraryRuntime.NATS.Reply.error(message, code) for errors
   """
 
   use GenServer
@@ -42,10 +42,10 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
 
   @impl true
   def handle_continue(:connect, state) do
-    case GenServer.call(BotArmyRuntime.NATS.Connection, :get_connection, 5000) do
+    case GenServer.call(BotArmyLibraryRuntime.NATS.Connection, :get_connection, 5000) do
       {:ok, conn} ->
         subscriptions = subscribe_to_subjects(conn)
-        BotArmyRuntime.Registry.register("outreach_manager", @subjects, @version)
+        BotArmyLibraryRuntime.Registry.register("outreach_manager", @subjects, @version)
         {:noreply, %{state | subscriptions: subscriptions, conn: conn}}
 
       {:error, _reason} ->
@@ -62,7 +62,7 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
 
   @impl true
   def handle_info({:msg, msg}, state) do
-    BotArmyRuntime.Tracing.with_consumer_span(msg.topic, Map.get(msg, :headers), fn ->
+    BotArmyLibraryRuntime.Tracing.with_consumer_span(msg.topic, Map.get(msg, :headers), fn ->
       Logger.debug("Received NATS message on subject: #{msg.topic}")
       handle_message(msg)
     end)
@@ -104,7 +104,7 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
 
   # Message handling
   defp handle_pubsub_message(msg) do
-    case BotArmyCore.NATS.Decoder.decode(msg.body) do
+    case BotArmyLibraryCore.NATS.Decoder.decode(msg.body) do
       {:ok, decoded_message} ->
         route_message(decoded_message, msg.topic)
 
@@ -115,7 +115,7 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
 
   # NATS subscriptions
   defp subscribe_to_subjects(conn) do
-    BotArmyRuntime.NATS.Connection.subscribe_to_status()
+    BotArmyLibraryRuntime.NATS.Connection.subscribe_to_status()
     Logger.info("Connected to NATS, subscribing to topics")
 
     @subjects
@@ -146,10 +146,10 @@ defmodule BotArmyOutreachManager.NATS.Consumer do
   #   response =
   #     case get_tasks() do
   #       {:ok, tasks} ->
-  #         BotArmyRuntime.NATS.Reply.ok(%{"tasks" => tasks})
+  #         BotArmyLibraryRuntime.NATS.Reply.ok(%{"tasks" => tasks})
   #
   #       {:error, reason} ->
-  #         BotArmyRuntime.NATS.Reply.error(inspect(reason), :list_failed)
+  #         BotArmyLibraryRuntime.NATS.Reply.error(inspect(reason), :list_failed)
   #     end
   #
   #   if state.conn do
