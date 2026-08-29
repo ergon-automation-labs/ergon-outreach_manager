@@ -1,1 +1,4 @@
 .push-validated
+
+# runtime publish/validation state markers (never commit)
+.release-published
