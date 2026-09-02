@@ -4,7 +4,7 @@ defmodule BotArmyOutreachManager.MixProject do
   def project do
     [
       app: :bot_army_outreach_manager,
-      version: "0.1.6",
+      version: "0.1.7",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
