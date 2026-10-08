@@ -78,8 +78,11 @@ deps:
 compile:
 	@LOG_FILE="/tmp/compile-manager-$$(date +%s).log"; \
 	echo "Compiling manager and logging to $$LOG_FILE..."; \
+	set -o pipefail; \
 	$(MIX) compile 2>&1 | tee "$$LOG_FILE"; \
-	echo "✓ Compilation log: $$LOG_FILE"
+	rc=$$?; \
+	echo "✓ Compilation log: $$LOG_FILE"; \
+	exit $$rc
 
 test:
 	$(MIX) test
@@ -93,11 +96,14 @@ dialyzer: deps
 DIALYZER_OUTPUT_FILE ?= /tmp/dialyzer_output.txt
 
 dialyzer-debug: deps
-	@echo "Running Dialyzer and saving output to: $(DIALYZER_OUTPUT_FILE)"
-	@$(MIX) dialyzer 2>&1 | tee $(DIALYZER_OUTPUT_FILE)
-	@echo ""
-	@echo "✓ Dialyzer output saved to: $(DIALYZER_OUTPUT_FILE)"
-	@echo "View with: cat $(DIALYZER_OUTPUT_FILE)"
+	@echo "Running Dialyzer and saving output to: $(DIALYZER_OUTPUT_FILE)"; \
+	set -o pipefail; \
+	@$(MIX) dialyzer 2>&1 | tee $(DIALYZER_OUTPUT_FILE); \
+	rc=$$?; \
+	@echo ""; \
+	@echo "✓ Dialyzer output saved to: $(DIALYZER_OUTPUT_FILE)"; \
+	@echo "View with: cat $(DIALYZER_OUTPUT_FILE)"; \
+	exit $$rc
 
 coverage:
 	$(MIX) coveralls
